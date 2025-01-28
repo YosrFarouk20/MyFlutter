@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+import 'product_form.dart';
 import 'package:get/get.dart';
-import 'translations.dart';
-import 'login_screen.dart';
+import 'product_controller.dart';
+import 'product.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,14 +12,68 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      translations: MyTranslations(), // إضافة الترجمة
-      locale: Locale('en'), // اللغة الافتراضية
-      fallbackLocale: Locale('en'), // لغة احتياطية
-      theme: ThemeData.light(), // الوضع المضيء
-      darkTheme: ThemeData.dark(), // الوضع المعتم
-      themeMode: ThemeMode.system, // الوضع الافتراضي حسب النظام
-      home: LoginScreen(),
+      title: 'CRUD with GetX',
+      home: ProductScreen(),
     );
   }
 }
 
+class ProductScreen extends StatelessWidget {
+  final ProductController controller = Get.put(ProductController());
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Products'),
+      ),
+      body: Obx(() {
+        if (controller.products.isEmpty) {
+          return Center(child: Text('No Products Found'));
+        }
+        return ListView.builder(
+          itemCount: controller.products.length,
+          itemBuilder: (context, index) {
+            final product = controller.products[index];
+            return ListTile(
+              title: Text(product.name),
+              subtitle: Text('\$${product.price}'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      Get.defaultDialog(
+                        title: 'Edit Product',
+                        content: ProductForm(
+                          product: product,
+                          onSubmit: controller.updateProduct,
+                        ),
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () => controller.deleteProduct(product.id),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          Get.defaultDialog(
+            title: 'Add Product',
+            content: ProductForm(
+              onSubmit: controller.addProduct,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
